@@ -8,6 +8,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+
+    public PlayerCharacter character;
     public PlayerInput pi;
     public Rigidbody2D rigid;
 
@@ -19,11 +21,14 @@ public class PlayerController : MonoBehaviour
     public float JumpForce = 5.0f;
     public bool isGrounded = false;
     public bool canJump = true;
+    public Coroutine jumpCR;
+
     public float deaccelForce = 0.5f;
     public bool canDash = true;
     public float dashForce = 10f;
     public bool isDashing = false;
-    
+    public Coroutine dashCR;
+
     [Header("Collision")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundMask;    
@@ -35,6 +40,10 @@ public class PlayerController : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody2D>();
         pi = GetComponent<PlayerInput>();
+        
+        // - Initialize Character
+        character = GetComponent<PlayerCharacter>();
+        character.pc = this;
     }
 
     private void Start()
@@ -102,7 +111,7 @@ public class PlayerController : MonoBehaviour
         if (jumpAction.IsPressed() && isGrounded && canJump)
         {
             rigid.AddForce(Vector2.up * JumpForce, ForceMode2D.Impulse);
-            StartCoroutine(TriggerJump());
+            jumpCR = StartCoroutine(TriggerJump());
         }
     }    
 
@@ -135,10 +144,11 @@ public class PlayerController : MonoBehaviour
             rigid.AddForce(dashDir * dashForce, ForceMode2D.Impulse);
             
             // - Dash Delay
-            StartCoroutine(TriggerDash());
+            dashCR = StartCoroutine(TriggerDash());
         }       
     }
 
+    // TODO: Break me into two coroutines: Move isDashing = false and gravity Scale 1 to a separate coroutine timer
     private IEnumerator TriggerDash()
     {
         canDash = false;
@@ -149,6 +159,15 @@ public class PlayerController : MonoBehaviour
         rigid.gravityScale = 1;
         yield return new WaitForSeconds(1.0f);
         canDash = true;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Absorbable"))
+        {
+            I_Absorbable target = other.GetComponent<I_Absorbable>();
+            character.ProcessAbsorbEffect(target);
+        }
     }
 
     private void OnDrawGizmosSelected()

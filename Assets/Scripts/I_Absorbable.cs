@@ -1,16 +1,8 @@
 using UnityEngine;
 
-public class I_Absorbable : MonoBehaviour
+public interface I_Absorbable
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public void Absorb(Character c);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public float GetInstabilityValue();
 }
